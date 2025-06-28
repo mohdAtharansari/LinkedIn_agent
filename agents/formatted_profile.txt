@@ -1,0 +1,40 @@
+**Profile for MOHD ATHAR ANSARI**
+
+**Headline:** AI Engineer | IIT KHARAGPUR '24 | JMI '21
+
+**Summary (About Section):**
+As an AI engineer, my expertise includes designing and implementing end-to-end AI agents, fine-tuning large language models (LLMs), and optimizing their inference performance to ensure faster and more efficient processing.
+I also specialize in building robust AI architectures capable of delivering high-quality responses with exceptional speed.
+
+**Experience:**
+
+1. **AI Engineer** at Dheyo AI (6/2024 - Present)
+    * [No description provided]
+
+2. **Teaching Assistant** at Indian Institute of Technology, Kharagpur (8/2022 - 5/2024)
+    * [No description provided]
+
+3. **Data Science Intern** at Maritime Research Center (5/2023 - 7/2023)
+    * The goal was to create a machine learning model for estimating nutrient concentrations in Indian rivers. Due to data scarcity for Indian rivers, an Artificial Neural Network (ANN) model was first developed using a Chinese river dataset. Then, transfer learning was employed to adapt the model to the limited Ganga river data. This innovative approach yielded a powerful model capable of predicting nutrient levels in Indian rivers, contributing to a better understanding of the environment and conservation efforts.
+
+4. **Data Analyst ** at Gurucool (1/2023 - 3/2023)
+    * • Analyzed the data given by the organization, delivered valuable insights, and performed web scraping to obtain relevant data
+    * • Conducted data cleaning operations on extensive datasets of study materials to ensure efficient management and usability
+    * • Designed comprehensive data science coursework for aspiring learners, ready to be shared on Gurucool platform Padhaai
+
+**Education:**
+
+*   **Master of Technology - MTech** - Indian Institute of Technology, Kharagpur (2022 - 2024)
+*   **Bachelor of Technology - BTech** in Mechanical Engineering - Jamia Millia Islamia (2017 - 2021)
+
+**Top Skills:**
+*   TensorFlow
+*   Data Analytics
+*   Artificial Intelligence (AI)
+*   Generative AI
+
+**Certifications:**
+*   Python (HackerRank)
+*   SQL (HackerRank)
+*   Data Structures and Algorithms (GeeksforGeeks)
+*   Java (HackerRank)
