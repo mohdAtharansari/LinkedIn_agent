@@ -1,7 +1,6 @@
 .env
-unit_test/test.ipynb
+unit_test/
 y
 y.pub
 li_chat
-unit_test/cookie.json
 agents/formatted_profile.txt
