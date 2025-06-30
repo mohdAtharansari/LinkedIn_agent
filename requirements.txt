@@ -3,3 +3,4 @@ langchain-google-genai
 apify-client
 python-dotenv
 langgraph
+langchain-groq

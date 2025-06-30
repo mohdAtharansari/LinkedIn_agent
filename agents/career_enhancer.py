@@ -1,11 +1,22 @@
 from states.state import GraphState
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_groq import ChatGroq
+from memory_manager.format_recent_msg import format_recent_messages
 import os
 from dotenv import load_dotenv
 load_dotenv()
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", api_key=os.getenv("google_api_key"))
+# llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", api_key=os.getenv("google_api_key"))
+
+llm = ChatGroq(
+    model="llama-3.3-70b-versatile",
+    temperature=0.0,
+    max_retries=2,
+    api_key= os.getenv("groq_api_key")
+    # other params...
+)
+
 
 def enhance_content(state: GraphState) -> dict:
     """
@@ -22,7 +33,8 @@ def enhance_content(state: GraphState) -> dict:
 
     # Step 1: Get the required data from the state.
     profile_text = state.get('profile_text')
-    last_user_message = state['messages'][-1].content
+    # last_user_message = state['messages'][-1].content
+    conversation_history = format_recent_messages(state['messages'])
 
     # Step 2: Safeguard - check for profile text.
     if not profile_text:
@@ -51,7 +63,7 @@ def enhance_content(state: GraphState) -> dict:
 
     **INPUTS FOR YOUR ANALYSIS:**
     ---
-    **User's Query:** "{last_user_message}"
+    **User's Query:** "{conversation_history}"
     ---
     **User's LinkedIn Profile:**
     {profile_text}

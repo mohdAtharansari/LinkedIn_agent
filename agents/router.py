@@ -56,4 +56,4 @@ After your internal thought process, respond with ONLY the category name and not
     print(f"---ROUTER: Classified intent as '{route}'---")
 
     # The router's job is now done. It simply returns the name of the next node.
-    return route
+    return {"route": route}

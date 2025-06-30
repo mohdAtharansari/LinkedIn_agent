@@ -1,13 +1,21 @@
 from states.state import GraphState
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
+from memory_manager.format_recent_msg import format_recent_messages
 import os
+from langchain_groq import ChatGroq
 from dotenv import load_dotenv
 load_dotenv()
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", api_key=os.getenv("google_api_key"))
+# llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", api_key=os.getenv("google_api_key"))
 
-
+llm = ChatGroq(
+    model="llama-3.3-70b-versatile",
+    temperature=0.0,
+    max_retries=2,
+    api_key= os.getenv("groq_api_key")
+    # other params...
+)
 def analyze_profile(state: GraphState) -> dict:
     """
     Performs a general analysis of the user's LinkedIn profile.

@@ -24,3 +24,4 @@ class GraphState(TypedDict):
     initial_analysis: str
     job_fit_report: str
     messages: Annotated[List[BaseMessage], lambda x, y: x + y]
+    route: str
