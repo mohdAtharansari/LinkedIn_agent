@@ -6,6 +6,7 @@ from agents.career_counsel import counsel_career
 from agents.career_enhancer import enhance_content
 from agents.general_question import general_question
 from agents.end_session import end_session
+from agents.linkedin_scraper import linkedin_scraper, format_profile_data
 import os
 import uuid
 from typing import TypedDict, Annotated, List
@@ -27,13 +28,12 @@ workflow.add_node("end_session", end_session)
 # Set the entry point of the graph
 workflow.set_entry_point("router")
 
-# Define the conditional edges from the router
-# The router's output string directly maps to the name of the next node.
+
 workflow.add_conditional_edges(
-    "router",  # The starting node
+    "router",  
     lambda state: state["route"],  # The function that reads the route from the state
     {
-        # The mapping from the route string to the next node
+        
         "analyze_profile": "analyze_profile",
         "analyze_job_fit": "analyze_job_fit",
         "enhance_content": "enhance_content",
@@ -55,35 +55,51 @@ workflow.add_edge("end_session", END)
 conn = sqlite3.connect("threads.sqlite", check_same_thread=False)
 memory = SqliteSaver(conn=conn)
 
-# Compile the graph into a runnable app, passing the checkpointer instance.
+
 app = workflow.compile(checkpointer=memory)
 if __name__ == "__main__":
-    print("Starting the AI Career Coach chat.")
-    print("Type 'exit' to quit.")
-
-    # Load the profile text from the file for our test session
-    try:
-        with open("agents/formatted_profile.txt", "r") as f:
-            profile_text = f.read()
-    except FileNotFoundError:
-        print("FATAL ERROR: 'formatted_profile.txt' not found. Please create it.")
+    print("--- AI Career Coach ---")
+    
+    # --- Step 1: Get URL from User (Pre-Graph Logic) ---
+    profile_url = input("Please enter a LinkedIn Profile URL to begin: ")
+    if not profile_url or "linkedin.com/in/" not in profile_url:
+        print("Invalid LinkedIn Profile URL. Exiting.")
         exit()
 
-    # Each conversation needs a unique ID. This is how we track memory.
-    # We can use a random UUID for each new chat session.
+    # --- Step 2: Scrape and Format Data (Pre-Graph Logic) ---
+    print("\nAnalyzing profile... This is a one-time setup for our session and may take a minute.")
+    
+    # Call your external functions
+    raw_profile_data = linkedin_scraper(profile_url)
+    
+    if not raw_profile_data:
+        print("Could not retrieve profile data. Exiting.")
+        exit()
+        
+    profile_text = format_profile_data(raw_profile_data)
+    
+    if not profile_text:
+        print("Could not format profile data. Exiting.")
+        exit()
+
+    print("\nProfile analysis complete! You can now start chatting with the AI coach.")
+    print("Type 'exit' to quit.")
+
+    # --- Step 3: Initialize the Graph Session with the Scraped Data ---
     thread_id = str(uuid.uuid4())
     config = {"configurable": {"thread_id": thread_id}}
 
-    # The initial state for a new conversation
+    # The initial state now includes the dynamically scraped profile_text
     initial_state = {
         "profile_text": profile_text,
-        "messages": [AIMessage(content="Hello! I'm your AI Career Coach. I have your profile loaded. How can I help you today?")]
+        "messages": [AIMessage(content="Hello! I'm your AI Career Coach. I've successfully analyzed your profile. How can I help you today?")]
     }
-    # We need to manually update the state for the first message
+    # Persist this initial state
     app.update_state(config, initial_state)
 
     print(f"\nAI: {initial_state['messages'][-1].content}")
 
+    # --- Step 4: Enter the Conversational Loop ---
     while True:
         user_input = input("You: ")
         if user_input.lower() == 'exit':
@@ -92,7 +108,7 @@ if __name__ == "__main__":
         # Prepare the input for the graph
         inputs = {"messages": [HumanMessage(content=user_input)]}
 
-        # Invoke the graph. LangGraph handles the state updates.
+        # Invoke the graph. It will use the profile_text already in its memory.
         final_state = app.invoke(inputs, config=config)
 
         # Print the AI's last response
