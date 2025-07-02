@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+client = ApifyClient(os.getenv("APIFY_API_TOKEN"))
 # In your scraper file
 
 def linkedin_scraper(profile_url: str) -> dict: 
@@ -19,7 +20,7 @@ def linkedin_scraper(profile_url: str) -> dict:
         print("ERROR: cookie.json not found. Please ensure it's in the 'unit_test' directory.")
         return None
 
-    client = ApifyClient(os.getenv("apify"))
+    
 
  
     run_input = {
@@ -148,5 +149,7 @@ def format_profile_data(item: dict) -> str:
             if authority:
                 cert_str += f" ({authority})"
             formatted_string += f"{cert_str}\n"
-            
+    f = open(f"agents/{first_name}_formatted_profile.txt", "w")
+    f.write(formatted_string)
+    f.close()        
     return formatted_string.strip()

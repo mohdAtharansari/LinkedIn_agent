@@ -29,11 +29,9 @@ def general_question(state: GraphState) -> dict:
     """
     print("---AGENT: Handling General Question---")
     
-    # We simply pass the entire message history to the LLM.
-    # This allows it to have a natural, context-aware conversation.
-    # We can add a light instruction to keep it in character.
     
-    # Prepending a system message to guide the response
+    convo = state['messages'][-4:]
+    
     prompt_messages = [
         AIMessage(content="You are a helpful and friendly AI career coach. Answer the user's general question."),
     ] + state['messages']
@@ -42,5 +40,5 @@ def general_question(state: GraphState) -> dict:
     
     return {"messages": [response]}
 
-# In your test file (e.g., agent_test.py)
+
 

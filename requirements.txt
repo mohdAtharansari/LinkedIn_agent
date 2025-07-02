@@ -4,3 +4,5 @@ apify-client
 python-dotenv
 langgraph
 langchain-groq
+langgraph-checkpoint-sqlite
+streamlit

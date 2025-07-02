@@ -19,11 +19,11 @@ def format_profile_data(item: dict) -> str:
     formatted_string = f"**Profile for {full_name}**\n\n"
     formatted_string += f"**Headline:** {headline}\n\n"
 
-    # --- 2. Summary (About Section) ---
+
     summary = item.get('summary', 'N/A')
     formatted_string += f"**Summary (About Section):**\n{summary}\n\n"
 
-    # --- 3. Professional Experience ---
+
     formatted_string += "**Experience:**\n\n"
     positions = item.get('positions', [])
     if not positions:
@@ -52,11 +52,11 @@ def format_profile_data(item: dict) -> str:
             formatted_string += f"{i}. **{title}** at {company_name} ({time_period_str})\n"
             
             description = pos.get('description', '[No description provided]').strip()
-            # Indent the description for readability
+      
             formatted_description = "\n".join([f"    * {line}" for line in description.split('\n')])
             formatted_string += f"{formatted_description}\n\n"
 
-    # --- 4. Education ---
+
     formatted_string += "**Education:**\n\n"
     educations = item.get('educations', [])
     if not educations:
@@ -67,7 +67,7 @@ def format_profile_data(item: dict) -> str:
             school = edu.get('schoolName', 'N/A')
             field = edu.get('fieldOfStudy')
             
-            # Format time period for education
+
             time_period = edu.get('timePeriod', {})
             start_year = time_period.get('startDate', {}).get('year', '')
             end_year = time_period.get('endDate', {}).get('year', '')
@@ -80,7 +80,7 @@ def format_profile_data(item: dict) -> str:
             formatted_string += edu_str
         formatted_string += "\n"
 
-    # --- 5. Skills ---
+
     formatted_string += "**Top Skills:**\n"
     skills = item.get('skills', [])
     if not skills:
@@ -90,7 +90,7 @@ def format_profile_data(item: dict) -> str:
             formatted_string += f"*   {skill}\n"
     formatted_string += "\n"
 
-    # --- 6. Certifications ---
+
     formatted_string += "**Certifications:**\n"
     certifications = item.get('certifications', [])
     if not certifications:

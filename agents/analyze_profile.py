@@ -31,19 +31,17 @@ def analyze_profile(state: GraphState) -> dict:
     """
     print("---AGENT: Executing Profile Analyzer---")
 
-    # Step 1: Get the required data from the state.
+
     profile_text = state.get('profile_text')
 
-    # Step 2: Add a safeguard. Check if the profile text actually exists.
+
     if not profile_text:
         print("---AGENT: Error - Profile text not found in state.---")
-        # This is a fallback message. In a real flow, the UI would ensure
-        # the profile is loaded before allowing this kind of query.
+
         error_message = AIMessage(content="It seems I don't have your profile data loaded yet. Please provide your LinkedIn URL first.")
         return {"messages": [error_message]}
 
-    # Step 3: Create the prompt. This is the core logic of the agent.
-    # This prompt guides the LLM to act as a professional coach.
+
     prompt = f"""
     You are a world-class LinkedIn profile optimization coach. Your tone is encouraging, professional, and highly constructive.
     Your task is to provide a comprehensive critique of the following LinkedIn profile.
@@ -81,11 +79,11 @@ def analyze_profile(state: GraphState) -> dict:
     ---
     """
 
-    # Step 4: Invoke the LLM to get the analysis.
+
     print("---AGENT: Sending request to LLM for analysis...---")
     analysis_response = llm.invoke(prompt)
 
-    # Step 5: Return the results to be updated in the GraphState.
+
     print("---AGENT: Analysis complete.---")
     return {
         "initial_analysis": analysis_response.content,
