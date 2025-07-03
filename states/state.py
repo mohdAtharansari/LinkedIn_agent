@@ -3,7 +3,7 @@ from typing import TypedDict, Annotated, List
 from langchain_core.messages import BaseMessage
 
 
-# --- Define the Shared Memory (State) for the Graph ---
+
 class GraphState(TypedDict):
     """
     Represents the state of our graph.
