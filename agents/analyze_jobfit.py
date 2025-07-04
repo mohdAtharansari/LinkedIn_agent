@@ -1,5 +1,6 @@
 from states.state import GraphState
 from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from memory_manager.format_recent_msg import format_recent_messages
@@ -13,12 +14,12 @@ llm = ChatGroq(
     temperature=0.0,
     max_retries=2,
     api_key= os.getenv("groq_api_key")
-    # other params...
+    
 )
 def analyze_job_fit(state: GraphState) -> dict:
     """
-    Compares the user's profile against a generated, industry-standard
-    job description for the role mentioned in the user's query.
+    Compares profile against a job role using a structured System/Human prompt.
+    It uses recent conversation history for context.
 
     Args:
         state: The current state of the graph.
@@ -26,25 +27,23 @@ def analyze_job_fit(state: GraphState) -> dict:
     Returns:
         A dictionary with the job fit report.
     """
-    print("---AGENT: Executing Job Fit Analyzer (as per spec)---")
+    print("---AGENT: Executing Job Fit Analyzer---")
 
-    
     profile_text = state.get('profile_text')
-    # last_user_message = state['messages'][-1].content
+    
     conversation_history = format_recent_messages(state['messages'])
 
-    
     if not profile_text:
         error_message = AIMessage(content="I need your profile data before I can perform a job fit analysis. Please provide your LinkedIn URL first.")
         return {"messages": [error_message]}
 
     
-    prompt = f"""
+    system_message_template = """
     You are an expert AI recruitment strategist. Your task is to analyze a user's LinkedIn profile against an industry-standard job description that you will generate.
 
     **Follow these steps precisely:**
 
-    1.  **Identify the Job Role:** First, carefully read the "User's Query" to identify the specific job role they are interested in. If no clear job role is mentioned, state that you need one to proceed.
+    1.  **Identify the Job Role:** First, carefully read the "Recent Conversation History" to identify the specific job role the user is interested in. The goal might be in the very last message or a previous one. If no clear job role is mentioned, state that you need one to proceed.
 
     2.  **Generate a Standard Job Description (Internal Step):** Based on the identified job role, mentally construct a detailed, industry-standard job description. This should include:
         *   Key Responsibilities (e.g., "Develop and deploy machine learning models," "Collaborate with product teams").
@@ -76,24 +75,39 @@ def analyze_job_fit(state: GraphState) -> dict:
     *Provide a prioritized list of actionable steps the user can take to improve their alignment.*
     *   Example: "1. **Add Project Metrics:** Edit your 'Data Analyst' experience to include specific numbers that show the results of your work."
     *   Example: "2. **Learn a Cloud Platform:** To fill the cloud technology gap, consider taking a foundational course in AWS or Azure and adding a small deployment project to your portfolio."
+    """
 
+    human_message_template = """
     **INPUTS FOR YOUR ANALYSIS:**
     ---
-    **User's Query:** "{conversation_history}"
+    **Recent Conversation History:**
+    {conversation_history}
     ---
     **User's LinkedIn Profile:**
     {profile_text}
     ---
     """
 
-  
-    print("---AGENT: Sending single, spec-compliant prompt to LLM...---")
-    analysis_response = llm.invoke(prompt)
+    
+    prompt_template = ChatPromptTemplate.from_messages([
+        ("system", system_message_template),
+        ("human", human_message_template),
+    ])
 
-   
+    
+    chain = prompt_template | llm
+
+    
+    print("---AGENT: Sending request to LLM for job fit analysis...---")
+    analysis_response = chain.invoke({
+        "conversation_history": conversation_history,
+        "profile_text": profile_text
+    })
+
     print("---AGENT: Analysis complete.---")
+    
+    
     return {
-        "job_fit_report": analysis_response.content,
         "messages": [analysis_response]
     }
 

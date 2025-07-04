@@ -1,5 +1,6 @@
 from states.state import GraphState
 from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from memory_manager.format_recent_msg import format_recent_messages
@@ -14,13 +15,13 @@ llm = ChatGroq(
     temperature=0.0,
     max_retries=2,
     api_key= os.getenv("groq_api_key")
-    # other params...
+    
 )
 
 def counsel_career(state: GraphState) -> dict:
     """
-    Identifies skill gaps for a target role mentioned in the user's query
-    and provides career counseling and learning resources.
+    Identifies skill gaps and provides career advice using a structured
+    System/Human prompt and recent conversation history.
 
     Args:
         state: The current state of the graph.
@@ -30,22 +31,20 @@ def counsel_career(state: GraphState) -> dict:
     """
     print("---AGENT: Executing Career Counselor---")
 
-    
     profile_text = state.get('profile_text')
     conversation_history = format_recent_messages(state['messages'])
 
-    
     if not profile_text:
         error_message = AIMessage(content="I need your profile data before I can provide career advice. Please provide your LinkedIn URL first.")
         return {"messages": [error_message]}
 
-    
-    prompt = f"""
-    You are a senior career strategist and counselor for tech professionals. Your task is to provide a detailed skill gap analysis and a strategic career plan based on the user's profile and their career aspirations mentioned in their query.
+   
+    system_message_template = """
+    You are a senior career strategist and counselor for tech professionals. Your task is to provide a detailed skill gap analysis and a strategic career plan based on the user's profile and their career aspirations, which you will determine from the recent conversation history.
 
     **Follow these steps precisely:**
 
-    1.  **Identify the Goal:** Read the "User's Query" to determine their target job role or career path (e.g., "Product Manager," "move into AI," "become a team lead"). If the query is too vague, ask for clarification.
+    1.  **Identify the Goal:** Read the "Recent Conversation History" to determine the user's target job role or career path (e.g., "Product Manager," "move into AI," "become a team lead"). If the query is too vague, ask for clarification.
 
     2.  **Analyze Current Skills:** Review the "User's LinkedIn Profile" to create a clear picture of their existing skills, experiences, and qualifications.
 
@@ -71,27 +70,43 @@ def counsel_career(state: GraphState) -> dict:
     *   Outline 2-3 immediate, practical steps the user can take in the next 1-3 months.
     *   Example: "1. **Start a Project:** Build a small web application that uses A/B testing and add it to your GitHub."
     *   Example: "2. **Update Your Profile:** As you learn, begin adding these new skills and project experiences to your LinkedIn to reflect your growth."
+    """
 
+    human_message_template = """
     **INPUTS FOR YOUR ANALYSIS:**
     ---
-    **User's Query:** "{conversation_history}"
+    **Recent Conversation History:**
+    {conversation_history}
     ---
     **User's LinkedIn Profile:**
     {profile_text}
     ---
     """
 
-    # Step 4: Invoke the LLM.
-    print("---AGENT: Sending request to LLM for career counseling...---")
-    counseling_response = llm.invoke(prompt)
+    
+    prompt_template = ChatPromptTemplate.from_messages([
+        ("system", system_message_template),
+        ("human", human_message_template),
+    ])
 
-    # Step 5: Return the result.
+    
+    chain = prompt_template | llm
+
+    
+    print("---AGENT: Sending request to LLM for career counseling...---")
+    counseling_response = chain.invoke({
+        "conversation_history": conversation_history,
+        "profile_text": profile_text
+    })
+
     print("---AGENT: Career counseling complete.---")
+    
+    
     return {
         "messages": [counseling_response]
     }
 
-# In your test file (e.g., agent_test.py)
+
 
 def test_career_counselor_agent():
     """

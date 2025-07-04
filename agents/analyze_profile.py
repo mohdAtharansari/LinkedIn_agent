@@ -2,6 +2,7 @@ from states.state import GraphState
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
 from memory_manager.format_recent_msg import format_recent_messages
+from langchain_core.prompts import ChatPromptTemplate
 import os
 from langchain_groq import ChatGroq
 from dotenv import load_dotenv
@@ -18,33 +19,30 @@ llm = ChatGroq(
 )
 def analyze_profile(state: GraphState) -> dict:
     """
-    Performs a general analysis of the user's LinkedIn profile.
-
-    This agent is triggered when the router classifies the user's
-    intent as 'analyze_profile'.
+    Performs a general analysis of the user's LinkedIn profile using a
+    structured System/Human prompt template.
 
     Args:
         state: The current state of the graph.
 
     Returns:
-        A dictionary with the analysis to update the state.
+        A dictionary with the analysis to update the state's messages.
     """
     print("---AGENT: Executing Profile Analyzer---")
 
-
     profile_text = state.get('profile_text')
-
 
     if not profile_text:
         print("---AGENT: Error - Profile text not found in state.---")
-
         error_message = AIMessage(content="It seems I don't have your profile data loaded yet. Please provide your LinkedIn URL first.")
         return {"messages": [error_message]}
 
+    
 
-    prompt = f"""
+    
+    system_message_template = """
     You are a world-class LinkedIn profile optimization coach. Your tone is encouraging, professional, and highly constructive.
-    Your task is to provide a comprehensive critique of the following LinkedIn profile.
+    Your task is to provide a comprehensive critique of the user's LinkedIn profile that they will provide.
 
     Analyze the profile based on these key areas, providing actionable advice for each:
 
@@ -72,22 +70,28 @@ def analyze_profile(state: GraphState) -> dict:
         - Identify the #1 biggest opportunity for improvement that will have the most impact.
 
     Provide your feedback in a clear, well-structured format using Markdown for headings and bullet points.
-
-    **LinkedIn Profile to Analyze:**
-    ---
-    {profile_text}
-    ---
     """
+    
+    human_message_template = "Here is the user's LinkedIn profile to analyze:\n\n---{profile_text}---"
 
+    
+    prompt_template = ChatPromptTemplate.from_messages([
+        ("system", system_message_template),
+        ("human", human_message_template),
+    ])
 
+    
+    chain = prompt_template | llm
+
+    
     print("---AGENT: Sending request to LLM for analysis...---")
-    analysis_response = llm.invoke(prompt)
-
+    analysis_response = chain.invoke({"profile_text": profile_text})
 
     print("---AGENT: Analysis complete.---")
+    
+    
     return {
-        "initial_analysis": analysis_response.content,
-        "messages": [analysis_response]  # The AIMessage from the LLM is added to the history
+        "messages": [analysis_response]
     }
 
 def test_analyze_profile():

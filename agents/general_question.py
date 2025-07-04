@@ -13,7 +13,7 @@ llm = ChatGroq(
     temperature=0.0,
     max_retries=2,
     api_key= os.getenv("groq_api_key")
-    # other params...
+    
 )
 
 

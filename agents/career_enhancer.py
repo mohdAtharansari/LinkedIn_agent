@@ -1,6 +1,6 @@
 from states.state import GraphState
 from langchain_core.messages import AIMessage, HumanMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_groq import ChatGroq
 from memory_manager.format_recent_msg import format_recent_messages
 import os
@@ -20,8 +20,8 @@ llm = ChatGroq(
 
 def enhance_content(state: GraphState) -> dict:
     """
-    Rewrites a specific section of the user's LinkedIn profile based
-    on their query. It does NOT use a separate 'job_role' state variable.
+    Rewrites a specific section of the user's LinkedIn profile using a
+    structured System/Human prompt and recent conversation history.
 
     Args:
         state: The current state of the graph.
@@ -29,29 +29,25 @@ def enhance_content(state: GraphState) -> dict:
     Returns:
         A dictionary with the rewritten content.
     """
-    print("---AGENT: Executing Content Enhancer (Corrected)---")
+    print("---AGENT: Executing Content Enhancer---")
 
-    # Step 1: Get the required data from the state.
     profile_text = state.get('profile_text')
-    # last_user_message = state['messages'][-1].content
     conversation_history = format_recent_messages(state['messages'])
 
-    # Step 2: Safeguard - check for profile text.
     if not profile_text:
         error_message = AIMessage(content="I need your profile data before I can rewrite a section. Please provide your LinkedIn URL first.")
         return {"messages": [error_message]}
 
-    # Step 3: The prompt for the Content Enhancer.
-    # This prompt now explicitly tells the LLM to find all context in the user's query.
-    prompt = f"""
-    You are an expert LinkedIn profile copywriter and career coach. Your task is to rewrite a section of the user's profile based on their request.
+    
+    system_message_template = """
+    You are an expert LinkedIn profile copywriter and career coach. Your task is to rewrite a section of the user's profile based on their request, which you will find in the conversation history.
     Your goal is to make the section more impactful, achievement-oriented, and aligned with industry best practices.
 
     **Follow these steps:**
 
-    1.  **Analyze the User's Query:**
+    1.  **Analyze the Conversation History:**
         *   First, identify which section of the profile the user wants to enhance (e.g., "Summary", "Headline", a specific job description).
-        *   Next, check if the query mentions a specific target job role (e.g., "for a 'Lead AI Researcher' role"). If it does, you MUST use that context to tailor the rewritten content with relevant keywords. If no role is mentioned, perform a general enhancement.
+        *   Next, check if the conversation mentions a specific target job role (e.g., "for a 'Lead AI Researcher' role"). If it does, you MUST use that context to tailor the rewritten content with relevant keywords. If no role is mentioned, perform a general enhancement.
 
     2.  **Review the Full Profile:** Read the entire "User's LinkedIn Profile" to understand their background, skills, and professional voice.
 
@@ -60,25 +56,42 @@ def enhance_content(state: GraphState) -> dict:
         *   Maintain the user's professional voice and ensure all factual information from the original profile is preserved.
         *   Present the output clearly, starting with a heading like "Rewritten Headline:" or "Rewritten Summary:".
         *   After providing the rewritten content, add a brief "Why it's better:" section explaining the key improvements you made (e.g., "Used stronger action verbs," "Added quantifiable impact," "Included keywords for your target role.").
+    """
 
+    human_message_template = """
     **INPUTS FOR YOUR ANALYSIS:**
     ---
-    **User's Query:** "{conversation_history}"
+    **Recent Conversation History:**
+    {conversation_history}
     ---
     **User's LinkedIn Profile:**
     {profile_text}
     ---
     """
 
-    # Step 4: Invoke the LLM.
-    print("---AGENT: Sending request to LLM for content enhancement...---")
-    enhancement_response = llm.invoke(prompt)
+    
+    prompt_template = ChatPromptTemplate.from_messages([
+        ("system", system_message_template),
+        ("human", human_message_template),
+    ])
 
-    # Step 5: Return the result.
+    
+    chain = prompt_template | llm
+
+    
+    print("---AGENT: Sending request to LLM for content enhancement...---")
+    enhancement_response = chain.invoke({
+        "conversation_history": conversation_history,
+        "profile_text": profile_text
+    })
+
     print("---AGENT: Content enhancement complete.---")
+    
+    
     return {
         "messages": [enhancement_response]
     }
+
 
 # In your test file (e.g., agent_test.py)
 

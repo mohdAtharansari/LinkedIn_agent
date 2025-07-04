@@ -15,7 +15,7 @@ def route_requests(state: GraphState) -> str:
     
     last_message = state['messages'][-1]
 
-    # The LLM-based classification prompt remains the same, as it's very effective.
+ 
     classification_prompt =f"""
 You are an expert request router for an AI career coach. Your primary goal is to accurately classify the user's latest message into one of the predefined categories.
 
@@ -55,5 +55,5 @@ After your internal thought process, respond with ONLY the category name and not
 
     print(f"---ROUTER: Classified intent as '{route}'---")
 
-    # The router's job is now done. It simply returns the name of the next node.
+    
     return {"route": route}
