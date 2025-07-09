@@ -5,6 +5,7 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from memory_manager.format_recent_msg import format_recent_messages
 import os
+import streamlit as st
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -14,7 +15,7 @@ llm = ChatGroq(
     model="llama-3.3-70b-versatile",
     temperature=0.0,
     max_retries=2,
-    api_key= os.getenv("groq_api_key")
+    api_key= st.secrets.get("GROQ_API_KEY")
     
 )
 

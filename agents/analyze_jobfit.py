@@ -4,6 +4,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_groq import ChatGroq
 from memory_manager.format_recent_msg import format_recent_messages
+import streamlit as st
 import os
 from dotenv import load_dotenv
 load_dotenv()

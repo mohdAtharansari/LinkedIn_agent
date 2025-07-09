@@ -1,10 +1,11 @@
 from states.state import GraphState
 from langchain_google_genai import ChatGoogleGenerativeAI
 import os
+import streamlit as st
 from dotenv import load_dotenv
 load_dotenv()
 
-llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", api_key=os.getenv("google_api_key"))
+llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", api_key=st.secrets.get("GOOGLE_API_KEY"))
 
 def route_requests(state: GraphState) -> str:
     """

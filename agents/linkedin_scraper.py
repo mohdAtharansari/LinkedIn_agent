@@ -4,25 +4,27 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-client = ApifyClient(os.getenv("APIFY_API_TOKEN"))
-# In your scraper file
+import streamlit as st
 
-def linkedin_scraper(profile_url: str) -> dict: 
+def linkedin_scraper(profile_url: str, apify_api_key: str, cookie_content: str) -> dict:
     """
-    Scrapes a single LinkedIn profile using the provided URL.
+    Scrapes a profile using the API key and cookie content provided by the user.
     """
-    # Load cookies from a JSON file
-
-    try:
-        with open("unit_test/cookie.json", "r") as f:
-            cookies = json.load(f)
-    except FileNotFoundError:
-        print("ERROR: cookie.json not found. Please ensure it's in the 'unit_test' directory.")
+    if not apify_api_key:
+        st.error("Apify API Key was not provided.")
+        return None
+    if not cookie_content:
+        st.error("LinkedIn cookie content was not provided.")
         return None
 
+    try:
+        cookies = json.loads(cookie_content)
+    except json.JSONDecodeError:
+        st.error("Invalid JSON format for the provided cookie content.")
+        return None
     
-
- 
+    # Initialize client with the user's key
+    client = ApifyClient(apify_api_key)
     run_input = {
         "cookie": cookies,
         "minDelay": 15,
@@ -30,19 +32,16 @@ def linkedin_scraper(profile_url: str) -> dict:
         "proxy": {"useApifyProxy": True, "apifyProxyCountry": "US"},
         "urls": [profile_url], 
     }
-
-    print("Running Apify actor... This may take a moment.")
-    run = client.actor("curious_coder/linkedin-profile-scraper").call(run_input=run_input)
-
-    print("💾 Check your data here: https://console.apify.com/storage/datasets/" + run["defaultDatasetId"])
     
-    # Fetch the result. This is a more robust way to get the item.
-    dataset_items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
-    if not dataset_items:
-        print("ERROR: Apify did not return any profile data. The URL might be invalid, private, or the session cookie may have expired.")
+    try:
+        run = client.actor("curious_coder/linkedin-profile-scraper").call(run_input=run_input)
+        dataset_items = list(client.dataset(run["defaultDatasetId"]).iterate_items())
+        if not dataset_items:
+            return None
+        return dataset_items[0]
+    except Exception as e:
+        st.error(f"An Apify error occurred. Please check your Apify Key. Error: {e}")
         return None
-        
-    return dataset_items[0]
 
 def format_profile_data(item: dict) -> str:
     """
