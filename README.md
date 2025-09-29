@@ -26,8 +26,8 @@ Follow these steps to set up and run the application on your local machine.
 ### 2. Clone the Repository
 
 ```bash
-git clone <repo-url>
-cd your-repo-name
+git clone https://github.com/mohdAtharansari/LinkedIn_agent.git
+cd LinkedIn_agent
 ```
 
 ### 3. Set Up the Virtual Environment
